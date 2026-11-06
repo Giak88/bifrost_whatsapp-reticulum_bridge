@@ -3,7 +3,7 @@
 ## alpha0.3
 
 - **English and Italian.** One catalogue (`bridge/i18n.py`) drives every bot reply, log line and sidecar message; the language is the `language` key of the config. Commands exist in both languages (`/download` = `/scarica`, `/quality` = `/qualita`, ...), and level words too (`low` = `basso`, ...).
-- **Guided installer** `setup.sh` (English/Italian): dependency check with optional `apt-get`, venv, npm, self-test, owner address, systemd units rendered for the real user and path (the project folder can live anywhere), WhatsApp pairing by QR or code, start, and a maintenance menu (status, logs, restart, re-pair, change owner/language, update, uninstall).
+- **Guided installer** `setup.sh` (English/Italian): dependency check with optional `apt-get`, venv, npm, self-test, owner address, systemd units rendered for the real user and path (the project folder can live anywhere), WhatsApp pairing by QR or code, start, a maintenance menu (status, logs, start, stop, restart, re-pair, change owner/language, update, uninstall) and `./setup.sh start|stop|restart|status|logs`.
 - Config keys are now English (`owner`, `[limits]`, `quality_img`, `groups = none|followed|all`, ...). Files from `alpha0.1`/`alpha0.2` keep working; `setup.sh` migrates them (keeping a `.bak`).
 - The state file written by `alpha0.2` (Italian level names) is read and converted.
 - The bridge writes its LXMF address to `~/.bifrost/address.txt` and validates the owner address at start.

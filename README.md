@@ -58,7 +58,7 @@ Then, in Sideband/MeshChatX, open a conversation with that address and send `/st
 
 > Use your client's **LXMF delivery address** as the owner, not its identity hash. If the bridge ignores you, the log says `Ignoring message from <...>`: that `<...>` is the address to use.
 
-Run `./setup.sh` again at any time for a menu: status, logs, restart, re-pair WhatsApp, change owner, change language, update, uninstall.
+Run `./setup.sh` again at any time for a menu: status, logs, start, stop, restart, re-pair WhatsApp, change owner, change language, update, uninstall.
 
 Unattended: `./setup.sh --lang en --yes --owner <32-hex> [--pair code --phone 15551234567]`.
 
@@ -131,6 +131,27 @@ Configs from `alpha0.1`/`alpha0.2` (Italian key names such as `proprietario`, `[
 ## Running alongside Sideband / MeshChatX
 
 They all talk to the same `rnsd` shared instance, so they can be connected to the same radio at once. Only `rnsd` touches the serial port. Bifrost logs a warning if it finds no shared instance and starts its own Reticulum instead; if you see it, check that `rnsd` is running.
+
+## Starting, stopping, restarting
+
+Two systemd services run the bridge: `bifrost` (LXMF side) and `bifrost-sidecar` (WhatsApp side). They start at boot. From the project folder:
+
+```bash
+./setup.sh start        # (re)start both
+./setup.sh stop         # stop both
+./setup.sh restart      # restart both (after editing config.ini)
+./setup.sh status       # service state, bridge address, pairing state
+./setup.sh logs         # follow the logs (Ctrl+C to leave)
+```
+
+or directly with systemd:
+
+```bash
+sudo systemctl restart bifrost-sidecar bifrost
+sudo systemctl stop bifrost bifrost-sidecar
+sudo systemctl disable --now bifrost bifrost-sidecar   # stop and don't start at boot
+sudo systemctl enable --now bifrost-sidecar bifrost    # the opposite
+```
 
 ## Logs
 

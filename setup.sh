@@ -6,6 +6,7 @@
 #   ./setup.sh --yes --owner <32-hex LXMF address> [--pair none|qr|code --phone 39333...]
 #                              unattended install (no questions)
 #   ./setup.sh --uninstall     remove the services (asks before touching your data)
+#   ./setup.sh start|stop|restart|status|logs     manage the running bridge
 #
 # Environment (advanced): BIFROST_HOME (data folder, default ~/.bifrost),
 # BIFROST_UNIT_DIR (default /etc/systemd/system), BIFROST_VENV_FLAGS (e.g. --system-site-packages).
@@ -77,12 +78,14 @@ m done_nostart "Services installed but not started (WhatsApp not paired). After 
 m menu_title   "Bifrost %s is installed. What do you want to do?" "Bifrost %s è installato. Cosa vuoi fare?"
 m menu_1       "1) Show status" "1) Mostra lo stato"
 m menu_2       "2) Show the log (Ctrl+C to leave)" "2) Mostra il log (Ctrl+C per uscire)"
-m menu_3       "3) Restart the services" "3) Riavvia i servizi"
-m menu_4       "4) Re-pair WhatsApp" "4) Abbina di nuovo WhatsApp"
-m menu_5       "5) Change the owner address" "5) Cambia l'indirizzo owner"
-m menu_6       "6) Change the language" "6) Cambia la lingua"
-m menu_7       "7) Update (dependencies, config, services) from this folder" "7) Aggiorna (dipendenze, configurazione, service) da questa cartella"
-m menu_8       "8) Uninstall" "8) Disinstalla"
+m menu_3       "3) Start the services" "3) Avvia i servizi"
+m menu_4       "4) Stop the services" "4) Ferma i servizi"
+m menu_5       "5) Restart the services" "5) Riavvia i servizi"
+m menu_6       "6) Re-pair WhatsApp" "6) Abbina di nuovo WhatsApp"
+m menu_7       "7) Change the owner address" "7) Cambia l'indirizzo owner"
+m menu_8       "8) Change the language" "8) Cambia la lingua"
+m menu_9       "9) Update (dependencies, config, services) from this folder" "9) Aggiorna (dipendenze, configurazione, service) da questa cartella"
+m menu_10      "10) Uninstall" "10) Disinstalla"
 m menu_0       "0) Quit" "0) Esci"
 m menu_ask     "Choice" "Scelta"
 m lang_set     "Language set to %s." "Lingua impostata su %s."
@@ -95,6 +98,9 @@ m yes_hint     "[y/N]" "[s/N]"
 m unknown_opt  "Unknown option: %s" "Opzione sconosciuta: %s"
 m yes_needs    "--yes needs --owner <address> on a first install." "--yes richiede --owner <indirizzo> alla prima installazione."
 m svc_status   "Services:" "Servizi:"
+m svc_started  "Services started." "Servizi avviati."
+m svc_stopped  "Services stopped." "Servizi fermati."
+m not_installed "Bifrost is not installed yet: run ./setup.sh first." "Bifrost non è ancora installato: lancia prima ./setup.sh."
 
 say()  { local fmt="${M[$LANGSEL.$1]:-$1}"; shift; printf "$fmt\n" "$@"; }
 step() { local fmt="${M[$LANGSEL.$1]}"; shift; printf "\n== $fmt\n" "$@"; }
@@ -119,7 +125,8 @@ while [ $# -gt 0 ]; do
     --phone)  PHONE="${2:-}"; shift 2 ;;
     --skip-tests) SKIP_TESTS=1; shift ;;
     --uninstall) ACTION=uninstall; shift ;;
-    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+    start|stop|restart|status|logs) ACTION="$1"; shift ;;
+    -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
     *) LANGSEL="${LANGSEL:-en}"; warn unknown_opt "$1"; exit 2 ;;
   esac
 done
@@ -353,27 +360,46 @@ do_uninstall() {
   say unin_done "$DIR"
 }
 
+show_status() {
+  say svc_status; sysd --no-pager status bifrost bifrost-sidecar 2>&1 | sed -n '1,14p'
+  [ -s "$DATA/address.txt" ] && say done_addr "$(cat "$DATA/address.txt")"
+  is_paired && say paired_yes "$DATA/wa-auth"
+}
+show_logs() { $SUDO journalctl -u bifrost -u bifrost-sidecar -f -n 40; }
+
+# start | stop | restart | status | logs
+service_cmd() {
+  [ "$HAVE_SYSTEMD" = 1 ] || die nosystemd
+  [ -f "$UNIT_DIR/bifrost.service" ] || die not_installed
+  case "$1" in
+    start|restart) sysd restart bifrost-sidecar bifrost && say svc_started ;;
+    stop)          sysd stop bifrost bifrost-sidecar && say svc_stopped ;;
+    status)        show_status ;;
+    logs)          show_logs ;;
+  esac
+}
+
 menu() {
   while :; do
     echo; say menu_title "$VERSION"
-    say menu_1; say menu_2; say menu_3; say menu_4; say menu_5; say menu_6; say menu_7; say menu_8; say menu_0
+    say menu_1; say menu_2; say menu_3; say menu_4; say menu_5; say menu_6; say menu_7; say menu_8; say menu_9; say menu_10; say menu_0
     read -r -p "$(say menu_ask): " c
     case "$c" in
-      1) say svc_status; sysd --no-pager status bifrost bifrost-sidecar 2>&1 | sed -n '1,14p'
-         [ -s "$DATA/address.txt" ] && say done_addr "$(cat "$DATA/address.txt")"
-         is_paired && say paired_yes "$DATA/wa-auth" ;;
-      2) $SUDO journalctl -u bifrost -u bifrost-sidecar -f -n 40 ;;
-      3) sysd restart bifrost-sidecar bifrost ;;
-      4) sysd stop bifrost-sidecar bifrost; if pair_whatsapp force; then sysd start bifrost-sidecar bifrost; fi ;;
-      5) local a
+      1) show_status ;;
+      2) show_logs ;;
+      3) service_cmd start ;;
+      4) service_cmd stop ;;
+      5) service_cmd restart ;;
+      6) sysd stop bifrost bifrost-sidecar; if pair_whatsapp force; then sysd start bifrost-sidecar bifrost; fi ;;
+      7) local a
          while :; do read -r -p "$(say ask_owner): " a; a="$(clean_addr "$a")"; valid_addr "$a" && break; say bad_owner; done
          cfg_set bridge owner "$a"; sysd restart bifrost; say owner_set ;;
-      6) local l; read -r -p "$(say ask_lang) " l; l="${l,,}"
+      8) local l; read -r -p "$(say ask_lang) " l; l="${l,,}"
          if [ "$l" = en ] || [ "$l" = it ]; then
            LANGSEL="$l"; cfg_set bridge language "$l"; install_services; sysd restart bifrost-sidecar bifrost; say lang_set "$l"
          fi ;;
-      7) do_update; ;;
-      8) do_uninstall; return ;;
+      9) do_update ;;
+      10) do_uninstall; return ;;
       0|q|"") return ;;
     esac
   done
@@ -385,6 +411,7 @@ say title "$VERSION"
 
 case "$ACTION" in
   uninstall) do_uninstall; exit 0 ;;
+  start|stop|restart|status|logs) service_cmd "$ACTION"; exit $? ;;
 esac
 
 if is_installed && [ "$YES" = 0 ] && [ -z "$OWNER" ] && [ -t 0 ]; then

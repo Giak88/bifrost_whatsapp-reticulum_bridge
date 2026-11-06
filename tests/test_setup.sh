@@ -101,6 +101,17 @@ chk "invalid owner refused" "! ./setup.sh --lang en --yes --owner nothex --pair 
 chk "--yes without owner refused" "! ./setup.sh --lang en --yes --pair none > $T/out.bad2 2>&1 && grep -q -- '--yes needs --owner' $T/out.bad2"
 chk "unknown option refused" "! ./setup.sh --bogus > $T/out.bad3 2>&1"
 
+echo "== start / stop / restart / status"
+./setup.sh --lang en --yes --owner "$OWNER" --pair none --skip-tests > /dev/null 2>&1
+: > "$STUB_LOG"
+./setup.sh --lang it stop > "$T/out.stop" 2>&1;    chk "stop stops bridge then sidecar" "grep -q 'systemctl stop bifrost bifrost-sidecar' $STUB_LOG && grep -q 'Servizi fermati' $T/out.stop"
+./setup.sh --lang en start > "$T/out.start" 2>&1;  chk "start starts sidecar then bridge" "grep -q 'systemctl restart bifrost-sidecar bifrost' $STUB_LOG && grep -q 'Services started' $T/out.start"
+./setup.sh --lang en restart > /dev/null 2>&1;     chk "restart" "[ \$(grep -c 'systemctl restart bifrost-sidecar bifrost' $STUB_LOG) -ge 2 ]"
+./setup.sh --lang en status > "$T/out.status" 2>&1; chk "status" "grep -q 'systemctl --no-pager status bifrost bifrost-sidecar' $STUB_LOG"
+rm -f "$T"/units/bifrost.service
+chk "commands refuse when not installed" "! ./setup.sh --lang en stop > $T/out.ni 2>&1 && grep -q 'not installed' $T/out.ni"
+./setup.sh --lang en --yes --owner "$OWNER" --pair none --skip-tests > /dev/null 2>&1
+
 echo "== uninstall"
 ./setup.sh --lang en --yes --owner "$OWNER" --pair none --skip-tests > /dev/null 2>&1
 ./setup.sh --lang en --yes --uninstall > "$T/out.un" 2>&1
