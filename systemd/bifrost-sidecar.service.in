@@ -1,0 +1,18 @@
+[Unit]
+Description=Bifrost - WhatsApp sidecar (Baileys)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=@USER@
+WorkingDirectory=@DIR@/sidecar
+Environment=BIFROST_DIR=@DATA@
+Environment=BIFROST_LANG=@LANG@
+ExecStart=@NODE@ index.mjs
+Restart=on-failure
+RestartSec=10
+# exit 2 = WhatsApp session unlinked from the phone: pairing must be redone by hand (./setup.sh)
+RestartPreventExitStatus=2
+
+[Install]
+WantedBy=multi-user.target

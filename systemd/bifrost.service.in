@@ -1,0 +1,16 @@
+[Unit]
+Description=Bifrost - WhatsApp <-> Reticulum/LXMF bridge
+After=@RNSD_UNIT@ bifrost-sidecar.service
+@RNSD_REQUIRES@
+Wants=bifrost-sidecar.service
+
+[Service]
+User=@USER@
+WorkingDirectory=@DIR@/bridge
+ExecStartPre=/bin/sleep 5
+ExecStart=@DATA@/venv/bin/python bifrost.py @DATA@/config.ini
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
