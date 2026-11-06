@@ -37,8 +37,8 @@ The bridge **never opens your radio**. It is a client of the `rnsd` shared insta
 ## Quick start
 
 ```bash
-git clone https://github.com/Giak88/bifrost-whatsapp-reticulum.git
-cd bifrost-whatsapp-reticulum
+git clone https://github.com/Giak88/bifrost_whatsapp-reticulum_bridge.git
+cd bifrost_whatsapp-reticulum_bridge
 ./setup.sh                 # asks for the language, then walks you through everything
 # or:  ./setup.sh --lang en
 ```

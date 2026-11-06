@@ -37,8 +37,8 @@ Il bridge **non apre mai la tua radio**. È un client della shared instance di `
 ## Avvio rapido
 
 ```bash
-git clone https://github.com/Giak88/bifrost-whatsapp-reticulum.git
-cd bifrost-whatsapp-reticulum
+git clone https://github.com/Giak88/bifrost_whatsapp-reticulum_bridge.git
+cd bifrost_whatsapp-reticulum_bridge
 ./setup.sh                 # chiede la lingua, poi ti guida in tutto
 # oppure:  ./setup.sh --lang it
 ```
