@@ -212,6 +212,52 @@ check(wa[-1]["kind"] == "video" and wa[-1]["mime"] == "video/mp4" and wa[-1]["te
 core.on_lxmf("", {FIELD_FILE_ATTACHMENTS: [["film.mp4", b"x" * (17 * 1024 * 1024)]]})
 check(wa[-1]["kind"] == "document", "video over 16 MB sent as a document")
 
+# --- /repeat N: everything the bridge sent can be sent again
+hspool = os.path.join(work, "hspool")
+os.makedirs(hspool)
+hcore_lx = []
+hcore = Core(os.path.join(work, "h.json"), hspool, Limits(history_max=4, history_h=1),
+             lx_send=lambda t, f: hcore_lx.append((t, f)), wa_send=lambda c: None, log=lambda s: None, lang=LANG)
+RP = {"en": "/repeat", "it": "/ripeti"}[LANG]
+OTHER_RP = {"en": "/ripeti", "it": "/repeat"}[LANG]
+hcore.on_wa_event(ev(text="uno"))
+hcore.on_wa_event(ev(chat="393330000000@s.whatsapp.net", chat_name="Luca", text="due"))
+shutil.copy(os.path.join(MEDIA, "foto.jpg"), os.path.join(hspool, "wa-foto.jpg"))
+hcore.on_wa_event(ev(kind="image", path=os.path.join(hspool, "wa-foto.jpg"), mime="image/jpeg", text="pic", size=75362))
+hcore.on_lxmf("/status", {})                       # command replies are part of the history too
+hcore.on_wa_event(ev(text="cinque"))
+check(len(hcore.st["history"]) == 4, "history capped at history_max")
+check(sum(1 for n in os.listdir(hspool) if n.startswith("hist-")) == 1, "history blob files match the entries")
+n0 = len(hcore_lx)
+hcore.on_lxmf(RP, {})
+check(hcore_lx[n0:] == [(T("repeat_usage"), {})], "bare /repeat: usage, nothing repeated")
+hcore.on_lxmf(RP + " 0", {})
+check(hcore_lx[-1][0] == T("repeat_usage"), "/repeat 0: usage")
+hcore.on_lxmf(RP + " abc", {})
+check(hcore_lx[-1][0] == T("repeat_usage"), "/repeat abc: usage")
+check(len(hcore.st["history"]) == 4 and hcore.st["history"][-1]["text"].endswith("cinque"),
+      "usage replies and repeats are not recorded")
+n0 = len(hcore_lx)
+hcore.on_lxmf(RP + " 4", {})
+out = hcore_lx[n0:]
+check(len(out) == 5 and out[0][0] == T("repeat_start", n=4) and out[1][0].startswith("\u21bb ")
+      and "Luca: due" in out[1][0] and FIELD_IMAGE in out[2][1] and "open" not in out[3][0] and out[4][0].endswith("cinque"),
+      "/repeat 4: every chat and the /status reply, oldest first, image with its field")
+n0 = len(hcore_lx)
+hcore.on_lxmf(OTHER_RP + " 50", {})
+check(len(hcore_lx) - n0 == 1 + 4 and hcore_lx[n0][0] == T("repeat_start", n=4), "other-language alias; N larger than the history")
+for e in hcore.st["history"]:
+    e["ts"] -= 2 * 3600
+hcore.expire_pending()
+check(hcore.st["history"] == [] and not any(n.startswith("hist-") for n in os.listdir(hspool)),
+      "history expires after history_h and blobs are removed")
+hcore.on_lxmf(RP + " 3", {})
+check(hcore_lx[-1][0] == T("repeat_none"), "/repeat with empty history")
+off = Core(os.path.join(work, "off.json"), spool, Limits(history_max=0), lambda t, f: None, lambda c: None,
+           log=lambda s: None, lang=LANG)
+off.on_wa_event(ev(text="x"))
+check(off.st["history"] == [], "history_max = 0 disables the history")
+
 # --- status and unknown command
 core.wa_status = "open"
 core.on_lxmf("/status", {})

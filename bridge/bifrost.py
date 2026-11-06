@@ -23,7 +23,7 @@ from core import Core, Limits  # noqa: E402
 from i18n import LANGS, make_t, norm_level  # noqa: E402
 
 APP = "bifrost"
-VERSION = "alpha0.3"
+VERSION = "alpha0.4"
 
 
 # Old (Italian) config names, still read for backward compatibility.
@@ -59,7 +59,8 @@ def load_config(path):
     lim = Limits()
     for k, typ in (("confirm_threshold_kb", int), ("max_file_mb", float), ("codec2_mode", str),
                    ("link_kbps", float), ("pending_ttl_h", float), ("groups", str),
-                   ("quality_img", str), ("quality_audio", str), ("max_video_wa_mb", float)):
+                   ("quality_img", str), ("quality_audio", str), ("max_video_wa_mb", float),
+                   ("history_h", float), ("history_max", int)):
         v = _get(cp, "limits", k)
         if v is not None and v.strip() != "":
             setattr(lim, k, typ(v.strip()))

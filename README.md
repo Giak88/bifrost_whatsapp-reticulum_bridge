@@ -4,7 +4,7 @@
 
 A bridge between **WhatsApp** and **Reticulum / LXMF**. Your WhatsApp chats show up as LXMF messages in Sideband or MeshChatX, and you answer from there — over LoRa, TCP, or whatever your Reticulum network is made of. Photos, voice notes, videos and files go both ways, squeezed to fit a radio link.
 
-> **Status: alpha (`alpha0.3`).** Tested end to end against a real `rnsd` and used live on a Debian 13 home server with a Heltec V4 RNode. Expect rough edges: see [Known limits](#known-limits).
+> **Status: alpha (`alpha0.4`).** Tested end to end against a real `rnsd` and used live on a Debian 13 home server with a Heltec V4 RNode. Expect rough edges: see [Known limits](#known-limits).
 
 ```
 WhatsApp ── Baileys (Node sidecar) ──Unix socket── bridge (Python) ── rnsd (shared instance) ── RNode / TCP / ...
@@ -18,6 +18,7 @@ The bridge **never opens your radio**. It is a client of the `rnsd` shared insta
 - **Media compression for LoRa**: photos become WebP (Sideband's low/medium/high presets), voice notes become Codec2 or Opus
 - **Confirmation for big media**: anything over a threshold (32 KB by default) is announced with its size and estimated airtime; you fetch it with `/download N`
 - **Quality switchable from the chat** (`/quality`), separately for photos and voice notes
+- **Repeat** (`/repeat N`): out of coverage? Ask the bridge to send you again the last N messages it sent you
 - Chat management by command: pick the active chat, write to another one with `#N text`, reply to the last one with `/r`
 - WhatsApp groups are off by default; follow the ones you want with `/follow N`
 - Commands work in **English and Italian** (`/download` = `/scarica`, ...); bot replies and logs follow the configured language
@@ -76,9 +77,10 @@ Send these from your LXMF client. Every message from WhatsApp starts with `#N Na
 | `/download N`, `/cancel N`, `/pending` | media waiting for confirmation |
 | `/follow N`, `/unfollow N` | forward a WhatsApp group (none by default) |
 | `/quality`, `/quality img medium`, `/quality audio medium` | quality of the photos and voice notes you *receive* |
+| `/repeat N` | send again the last N messages the bridge sent you (every chat, command replies included), oldest first, marked `↻ HH:MM`; photos and voice notes included. `/repeat` alone only shows the usage |
 | `/status`, `/help` | version, WhatsApp state, active chat / command list |
 
-Italian aliases: `/scarica`, `/annulla`, `/pendenti`, `/segui`, `/ignora`, `/qualita`, `/stato`, `/aiuto`. Levels can be written `low|medium|high|original` or `basso|medio|alto|originale`.
+Italian aliases: `/scarica`, `/annulla`, `/pendenti`, `/segui`, `/ignora`, `/qualita`, `/ripeti`, `/stato`, `/aiuto`. Levels can be written `low|medium|high|original` or `basso|medio|alto|originale`.
 
 Attachments (photo, voice note, file) sent from your client go to the active chat.
 
@@ -124,6 +126,7 @@ Whatever is still bigger than `confirm_threshold_kb` *after* conversion is held:
 | `link_kbps` | 1.2 | your real link speed, only for the time estimate |
 | `max_video_wa_mb` | 16 | videos up to this size go to WhatsApp as videos |
 | `pending_ttl_h` | 24 | hours before unfetched media are discarded |
+| `history_h`, `history_max` | 48, 100 | how long / how many sent messages `/repeat` can bring back |
 | `groups` | `followed` | `none`, `followed` or `all` |
 
 Configs from `alpha0.1`/`alpha0.2` (Italian key names such as `proprietario`, `[limiti]`) are still read, and `setup.sh` renames them for you.

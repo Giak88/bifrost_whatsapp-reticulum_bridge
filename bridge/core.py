@@ -35,6 +35,8 @@ class Limits:
     link_kbps: float = 1.2            # real throughput estimate, only for the ETA
     pending_ttl_h: float = 24
     groups: str = "followed"          # none | followed | all
+    history_h: float = 48             # how long sent messages stay available for /repeat
+    history_max: int = 100            # ...and how many
 
 
 def human_size(n):
@@ -69,6 +71,7 @@ COMMANDS = {
     "/cancel": "cancel", "/annulla": "cancel",
     "/quality": "quality", "/qualita": "quality", "/qualità": "quality",
     "/status": "status", "/stato": "status",
+    "/repeat": "repeat", "/ripeti": "repeat",
 }
 QUALITY_KINDS = {"img": "img", "image": "img", "images": "img", "photo": "img", "photos": "img",
                  "immagini": "img", "immagine": "img", "foto": "img",
@@ -80,7 +83,8 @@ class Core:
         self.state_path = state_path
         self.spool = spool_dir
         self.lim = limits
-        self.lx_send = lx_send
+        self._raw_send = lx_send       # used by /repeat, so repeats are not recorded again
+        self.lx_send = self._send
         self.wa_send = wa_send
         self.log = log
         self.version = version
@@ -90,7 +94,8 @@ class Core:
         self.req_n = 0
         self.req_desc = {}
         self.st = {"chats": {}, "next_chat": 1, "active": None, "last_in": None,
-                   "follow": [], "pending": {}, "next_pending": 1, "quality": {}}
+                   "follow": [], "pending": {}, "next_pending": 1, "quality": {},
+                   "history": [], "next_hist": 1}
         self._load()
 
     # ------------------------------------------------------------ stato
@@ -201,8 +206,8 @@ class Core:
         kname = self.t("kind_" + k) if k in KIND_ICON else self.t("kind_other")
         if not path:
             self.lx_send(self.t("media_unavailable", head=head, icon=icon, kind=kname,
-                                size=human_size(ev.get("size", 0)),
-                                error=ev.get("error") or self.t("default_error"), caption=caption).strip(), {})
+                             size=human_size(ev.get("size", 0)),
+                             error=ev.get("error") or self.t("default_error"), caption=caption).strip(), {})
             return
         try:
             with open(path, "rb") as f:
@@ -211,14 +216,14 @@ class Core:
         except MediaError as e:
             self._drop_spool(path)
             self.lx_send(self.t("media_not_convertible", head=head, icon=icon, kind=kname, error=e,
-                                caption=caption).strip(), {})
+                             caption=caption).strip(), {})
             return
 
         head = head + note
         if size > self.lim.max_file_mb * 1024 * 1024:
             self._drop_spool(path)
             self.lx_send(self.t("media_too_big", head=head, icon=icon, label=label, size=human_size(size),
-                                limit=self.lim.max_file_mb, caption=caption).strip(), {})
+                             limit=self.lim.max_file_mb, caption=caption).strip(), {})
             return
         if size <= self.lim.confirm_threshold_kb * 1024:
             self._drop_spool(path)
@@ -235,7 +240,7 @@ class Core:
         self.st["pending"][str(pid)] = {"blob": blob, "head": head, "caption": caption,
                                         "label": label, "size": size, "ts": time.time()}
         self.lx_send(self.t("media_pending", head=head, icon=icon, label=label, size=human_size(size),
-                            eta=human_eta(size, self.lim.link_kbps), pid=pid, caption=caption).strip(), {})
+                         eta=human_eta(size, self.lim.link_kbps), pid=pid, caption=caption).strip(), {})
 
     def _drop_spool(self, path):
         if path and os.path.dirname(os.path.abspath(path)) == os.path.abspath(self.spool):
@@ -244,6 +249,63 @@ class Core:
             except FileNotFoundError:
                 pass
 
+    # ------------------------------------------------------------ history / repeat
+    def _send(self, text, fields):
+        """Every message to the owner goes through here and is remembered for /repeat."""
+        self._remember(text, fields)
+        self._raw_send(text, fields)
+
+    def _remember(self, text, fields):
+        if self.lim.history_max <= 0:
+            return
+        hid = self.st["next_hist"]
+        self.st["next_hist"] += 1
+        entry = {"id": hid, "ts": time.time(), "text": text, "blob": None}
+        if fields:
+            blob = os.path.join(self.spool, f"hist-{hid}")
+            try:
+                with open(blob, "w") as f:
+                    json.dump(_encode_field(fields), f)
+                entry["blob"] = blob
+            except OSError:
+                pass
+        hist = self.st["history"]
+        hist.append(entry)
+        while len(hist) > self.lim.history_max:
+            self._drop_hist(hist.pop(0))
+
+    def _drop_hist(self, entry):
+        if entry.get("blob"):
+            self._drop_spool(entry["blob"])
+
+    def _expire_history(self):
+        cutoff = time.time() - self.lim.history_h * 3600
+        hist = self.st["history"]
+        for e in [e for e in hist if e["ts"] < cutoff]:
+            self._drop_hist(e)
+            hist.remove(e)
+
+    def _cmd_repeat(self, arg):
+        """/repeat N: send again the last N messages the bridge sent you (any chat), oldest first."""
+        t = self.t
+        arg = arg.strip()
+        if not arg.isdigit() or int(arg) == 0:
+            return self._raw_send(t("repeat_usage"), {})
+        sel = self.st["history"][-int(arg):]
+        if not sel:
+            return self._raw_send(t("repeat_none"), {})
+        self._raw_send(t("repeat_start", n=len(sel)), {})
+        for e in sel:
+            fields = {}
+            if e.get("blob"):
+                try:
+                    with open(e["blob"]) as f:
+                        fields = _decode_field(json.load(f))
+                except (OSError, ValueError):
+                    pass
+            fmt = "%d/%m %H:%M" if time.time() - e["ts"] > 20 * 3600 else "%H:%M"
+            self._raw_send(f"\u21bb {time.strftime(fmt, time.localtime(e['ts']))} {e['text']}", fields)
+
     def expire_pending(self):
         with self.lock:
             now = time.time()
@@ -251,6 +313,7 @@ class Core:
                 if now - p["ts"] > self.lim.pending_ttl_h * 3600:
                     self._drop_spool(p["blob"])
                     del self.st["pending"][pid]
+            self._expire_history()
             self._save()
 
     # ------------------------------------------------------------ LXMF -> WhatsApp
@@ -366,6 +429,8 @@ class Core:
                 say(t("cancel_none"))
         elif cmd == "quality":
             self._cmd_quality(arg)
+        elif cmd == "repeat":
+            self._cmd_repeat(arg)
         elif cmd == "status":
             a = self._chat(self.st["active"]) if self.st["active"] else None
             chat = f"#{self.st['active']} {a['name']}" if a else t("none_word")

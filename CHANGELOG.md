@@ -1,5 +1,10 @@
 # Changelog
 
+## alpha0.4
+
+- **`/repeat N` (`/ripeti N`)**: the bridge keeps every message it sent you (`history_h`, default 48 h, up to `history_max`, default 100; photos and voice notes included) and sends the last N again on request, oldest first, marked `↻ HH:MM`. Useful after being out of LoRa coverage. The number is required: `/repeat` alone replies with the usage.
+- New `[limits]` keys `history_h` and `history_max` (`history_max = 0` turns the history off).
+
 ## alpha0.3
 
 - **English and Italian.** One catalogue (`bridge/i18n.py`) drives every bot reply, log line and sidecar message; the language is the `language` key of the config. Commands exist in both languages (`/download` = `/scarica`, `/quality` = `/qualita`, ...), and level words too (`low` = `basso`, ...).
