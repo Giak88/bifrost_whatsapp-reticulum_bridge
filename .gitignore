@@ -1,0 +1,13 @@
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+config.ini
+*.bak
+*.tmp
+wa-auth/
+spool/
+state.json
+identity
+address.txt
