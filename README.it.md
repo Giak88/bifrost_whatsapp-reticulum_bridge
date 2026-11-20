@@ -4,7 +4,7 @@
 
 Un ponte tra **WhatsApp** e **Reticulum / LXMF**. Le tue chat WhatsApp arrivano come messaggi LXMF in Sideband o MeshChatX e rispondi da lì, via LoRa, TCP o qualunque cosa compone la tua rete Reticulum. Foto, vocali, video e file viaggiano in entrambe le direzioni, compressi per stare in un link radio.
 
-> **Stato: alpha (`alpha0.4.1`).** Provato end to end contro un vero `rnsd` e usato dal vivo su un server domestico Debian 13 con un RNode Heltec V4. Aspettati qualche spigolo: vedi [Limiti noti](#limiti-noti).
+> **Stato: alpha (`alpha0.5`).** Provato end to end contro un vero `rnsd` e usato dal vivo su un server domestico Debian 13 con un RNode Heltec V4. Aspettati qualche spigolo: vedi [Limiti noti](#limiti-noti).
 
 ```
 WhatsApp ── Baileys (sidecar Node) ──socket Unix── bridge (Python) ── rnsd (shared instance) ── RNode / TCP / ...
@@ -78,6 +78,7 @@ Mandali dal tuo client LXMF. Ogni messaggio da WhatsApp inizia con `#N Nome:` (g
 | `/segui N`, `/ignora N` | inoltra un gruppo WhatsApp (di default nessuno) |
 | `/qualita`, `/qualita img medio`, `/qualita audio medio` | qualità di foto e vocali che *ricevi* |
 | `/ripeti N` | rimanda gli ultimi N messaggi che il bridge ti ha inviato (tutte le chat, risposte ai comandi comprese), dal più vecchio, marcati `↻ HH:MM`; foto e vocali inclusi. `/ripeti` da solo mostra solo l'uso |
+| `/ripeti #C N` | come sopra, ma solo i messaggi arrivati dalla chat `#C` (ad es. `/ripeti #3 5`; va bene anche `*3`) |
 | `/stato`, `/aiuto` | versione, stato di WhatsApp, chat attiva / elenco comandi |
 
 Alias inglesi: `/download`, `/cancel`, `/pending`, `/follow`, `/unfollow`, `/quality`, `/repeat`, `/status`, `/help`. I livelli si scrivono `basso|medio|alto|originale` oppure `low|medium|high|original`.

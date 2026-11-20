@@ -1,5 +1,9 @@
 # Changelog
 
+## alpha0.5
+
+- **`/repeat #C N` (`/ripeti #C N`)**: repeat only the last N messages that came from chat `#C` (e.g. `/ripeti #3 5`); `*3` works as well as `#3`. `/repeat N` still repeats everything the bridge sent you.
+
 ## alpha0.4.1
 
 - **`/to` with a message**: `/to +393331234567 hello` and `/to 3 hello` now select the chat *and* send the text (before, anything after the number made the command fail with the usage message). The number may contain spaces (`/to +39 333 123 4567 hello`). `/to N` alone still only selects the chat.

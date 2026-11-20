@@ -4,7 +4,7 @@
 
 A bridge between **WhatsApp** and **Reticulum / LXMF**. Your WhatsApp chats show up as LXMF messages in Sideband or MeshChatX, and you answer from there — over LoRa, TCP, or whatever your Reticulum network is made of. Photos, voice notes, videos and files go both ways, squeezed to fit a radio link.
 
-> **Status: alpha (`alpha0.4.1`).** Tested end to end against a real `rnsd` and used live on a Debian 13 home server with a Heltec V4 RNode. Expect rough edges: see [Known limits](#known-limits).
+> **Status: alpha (`alpha0.5`).** Tested end to end against a real `rnsd` and used live on a Debian 13 home server with a Heltec V4 RNode. Expect rough edges: see [Known limits](#known-limits).
 
 ```
 WhatsApp ── Baileys (Node sidecar) ──Unix socket── bridge (Python) ── rnsd (shared instance) ── RNode / TCP / ...
@@ -78,6 +78,7 @@ Send these from your LXMF client. Every message from WhatsApp starts with `#N Na
 | `/follow N`, `/unfollow N` | forward a WhatsApp group (none by default) |
 | `/quality`, `/quality img medium`, `/quality audio medium` | quality of the photos and voice notes you *receive* |
 | `/repeat N` | send again the last N messages the bridge sent you (every chat, command replies included), oldest first, marked `↻ HH:MM`; photos and voice notes included. `/repeat` alone only shows the usage |
+| `/repeat #C N` | same, but only the messages that came from chat `#C` (e.g. `/repeat #3 5`; `*3` works too) |
 | `/status`, `/help` | version, WhatsApp state, active chat / command list |
 
 Italian aliases: `/scarica`, `/annulla`, `/pendenti`, `/segui`, `/ignora`, `/qualita`, `/ripeti`, `/stato`, `/aiuto`. Levels can be written `low|medium|high|original` or `basso|medio|alto|originale`.

@@ -23,7 +23,7 @@ from core import Core, Limits  # noqa: E402
 from i18n import LANGS, make_t, norm_level  # noqa: E402
 
 APP = "bifrost"
-VERSION = "alpha0.4.1"
+VERSION = "alpha0.5"
 
 
 # Old (Italian) config names, still read for backward compatibility.

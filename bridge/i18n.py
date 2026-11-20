@@ -20,6 +20,7 @@ MSG = {
 /follow N, /unfollow N - forward a group (or stop)
 /quality - quality of the photos and voice notes you receive
 /repeat N - send again the last N messages the bridge sent you (e.g. after being out of coverage)
+/repeat #C N - send again the last N messages of chat C only
 /status - bridge status
 Plain text goes to the active chat, and so do attachments.""",
         "it": """Comandi Bifrost:
@@ -33,6 +34,7 @@ Plain text goes to the active chat, and so do attachments.""",
 /segui N, /ignora N - inoltro di un gruppo
 /qualita - qualità di foto e vocali che ricevi
 /ripeti N - rimanda gli ultimi N messaggi che il bridge ti ha inviato (ad es. dopo essere stato fuori copertura)
+/ripeti #C N - rimanda gli ultimi N messaggi della sola chat C
 /stato - stato del bridge
 Il testo semplice va alla chat attiva. Allegati: alla chat attiva.""",
     },
@@ -76,8 +78,12 @@ Il testo semplice va alla chat attiva. Allegati: alla chat attiva.""",
         "it": "Niente da ripetere (lo storico conserva i messaggi del bridge per un tempo limitato).",
     },
     "repeat_usage": {
-        "en": "Usage: /repeat N (e.g. /repeat 10 sends again the last 10 messages)",
-        "it": "Uso: /ripeti N (ad es. /ripeti 10 rimanda gli ultimi 10 messaggi)",
+        "en": "Usage: /repeat N (e.g. /repeat 10: the last 10 messages) or /repeat #C N (e.g. /repeat #3 5: the last 5 from chat #3)",
+        "it": "Uso: /ripeti N (ad es. /ripeti 10: gli ultimi 10 messaggi) oppure /ripeti #C N (ad es. /ripeti #3 5: gli ultimi 5 della chat #3)",
+    },
+    "repeat_none_chat": {
+        "en": "Nothing to repeat from chat #{n} (the history keeps the bridge's messages for a limited time).",
+        "it": "Niente da ripetere dalla chat #{n} (lo storico conserva i messaggi del bridge per un tempo limitato).",
     },
     "none_word": {"en": "none", "it": "nessuna"},
     "policy_none": {"en": "none", "it": "nessuno"},

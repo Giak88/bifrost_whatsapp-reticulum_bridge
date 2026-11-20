@@ -286,14 +286,20 @@ class Core:
             hist.remove(e)
 
     def _cmd_repeat(self, arg):
-        """/repeat N: send again the last N messages the bridge sent you (any chat), oldest first."""
+        """/repeat N: the last N messages the bridge sent you (any chat), oldest first.
+        /repeat #C N (or *C N): the last N messages that came from chat C."""
         t = self.t
-        arg = arg.strip()
-        if not arg.isdigit() or int(arg) == 0:
+        m = re.fullmatch(r"(?:[#*]\s*(\d+)\s+)?(\d+)", arg.strip())
+        if not m or int(m.group(2)) == 0:
             return self._raw_send(t("repeat_usage"), {})
-        sel = self.st["history"][-int(arg):]
+        hist = self.st["history"]
+        if m.group(1):
+            # forwarded messages always start with the chat tag "#C " (see _wa_msg)
+            tag = f"#{int(m.group(1))} "
+            hist = [e for e in hist if e["text"].startswith(tag)]
+        sel = hist[-int(m.group(2)):]
         if not sel:
-            return self._raw_send(t("repeat_none"), {})
+            return self._raw_send(t("repeat_none_chat", n=int(m.group(1))) if m.group(1) else t("repeat_none"), {})
         self._raw_send(t("repeat_start", n=len(sel)), {})
         for e in sel:
             fields = {}

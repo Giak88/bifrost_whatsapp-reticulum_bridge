@@ -262,6 +262,21 @@ check(len(out) == 5 and out[0][0] == T("repeat_start", n=4) and out[1][0].starts
 n0 = len(hcore_lx)
 hcore.on_lxmf(OTHER_RP + " 50", {})
 check(len(hcore_lx) - n0 == 1 + 4 and hcore_lx[n0][0] == T("repeat_start", n=4), "other-language alias; N larger than the history")
+n0 = len(hcore_lx)
+hcore.on_lxmf(RP + " #1 5", {})
+out = hcore_lx[n0:]
+check(len(out) == 3 and out[0][0] == T("repeat_start", n=2) and out[1][0].endswith("pic") and FIELD_IMAGE in out[1][1]
+      and out[2][0].endswith("cinque"), "/repeat #C N: only that chat, oldest first, no command replies")
+n0 = len(hcore_lx)
+hcore.on_lxmf(RP + " *2 1", {})
+check(len(hcore_lx) - n0 == 2 and "Luca: due" in hcore_lx[-1][0], "/repeat *C N works too")
+hcore.on_lxmf(RP + " # 2 1", {})
+check("Luca: due" in hcore_lx[-1][0], "/repeat # C N (space after #)")
+hcore.on_lxmf(RP + " #9 3", {})
+check(hcore_lx[-1][0] == T("repeat_none_chat", n=9), "/repeat #C N: nothing from that chat")
+for bad in (" #1", " #1 0", " #x 3", " 3 #1"):
+    hcore.on_lxmf(RP + bad, {})
+    check(hcore_lx[-1][0] == T("repeat_usage"), f"/repeat{bad}: usage")
 for e in hcore.st["history"]:
     e["ts"] -= 2 * 3600
 hcore.expire_pending()
