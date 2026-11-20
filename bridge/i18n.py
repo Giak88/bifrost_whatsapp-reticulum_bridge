@@ -11,7 +11,7 @@ MSG = {
     "help": {
         "en": """Bifrost commands:
 /chat - latest chats with their number
-/to N - set the active chat (also /to +15551234567)
+/to N [text] - set the active chat (also /to +15551234567); with text it is sent right away
 #N text - write to chat N without switching to it
 /r text - reply to the last chat that wrote to you
 /download N - fetch a pending media file
@@ -24,7 +24,7 @@ MSG = {
 Plain text goes to the active chat, and so do attachments.""",
         "it": """Comandi Bifrost:
 /chat - ultime chat con il loro numero
-/to N - imposta la chat attiva (anche /to +39333...)
+/to N [testo] - imposta la chat attiva (anche /to +39333...); con il testo lo invia subito
 #N testo - scrivi alla chat N senza cambiarla
 /r testo - rispondi all'ultima chat che ti ha scritto
 /scarica N - scarica un media in attesa
@@ -49,7 +49,7 @@ Il testo semplice va alla chat attiva. Allegati: alla chat attiva.""",
     "tag_group": {"en": " [group]", "it": " [gruppo]"},
     "tag_active": {"en": " ◀ active", "it": " ◀ attiva"},
     "to_ok": {"en": "Active chat: #{n} {name}", "it": "Chat attiva: #{n} {name}"},
-    "to_usage": {"en": "Usage: /to N or /to +15551234567", "it": "Uso: /to N oppure /to +39333..."},
+    "to_usage": {"en": "Usage: /to N [message] or /to +15551234567 [message]", "it": "Uso: /to N [messaggio] oppure /to +39333... [messaggio]"},
     "reply_none": {"en": "Nobody has written to you yet.", "it": "Nessuno ti ha ancora scritto."},
     "follow_usage": {
         "en": "Usage: {cmd} N (N is a group, see /chat)",

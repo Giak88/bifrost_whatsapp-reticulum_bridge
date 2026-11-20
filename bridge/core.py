@@ -327,11 +327,12 @@ class Core:
             if m:
                 target, text = int(m.group(1)), m.group(2).strip()
             elif text.startswith("/"):
-                if self._command(text):
+                res = self._command(text, bool(fields))
+                if res is True:
                     self._save()
                     return
-                # /r con testo o allegato cade qui sotto
-                target, text = self.st["last_in"], text[2:].strip()
+                # /r or /to with text or attachment: send it to that chat
+                target, text = res
 
             if target is None or not self._chat(target):
                 self.lx_send(self.t("no_active_chat"), {})
@@ -354,8 +355,8 @@ class Core:
                 self.lx_send(self.t("empty_message"), {})
             self._save()
 
-    def _command(self, text):
-        """True if the command was handled; False for /r (text to forward)."""
+    def _command(self, text, has_fields=False):
+        """True if the command was handled; (chat, text) when there is a message to send (/r, /to N text)."""
         parts = text.split(maxsplit=1)
         raw, arg = parts[0].lower(), (parts[1].strip() if len(parts) > 1 else "")
         cmd = COMMANDS.get(raw)
@@ -380,21 +381,28 @@ class Core:
                     lines.append(f"#{cid} {c['name']}{tag}{star}")
                 say("\n".join(lines))
         elif cmd == "to":
-            if num is not None and self._chat(num):
-                self.st["active"] = num
-                say(t("to_ok", n=num, name=self._chat(num)["name"]))
-            elif re.fullmatch(r"\+?\d{8,15}", arg.replace(" ", "")):
-                jid = arg.replace(" ", "").lstrip("+") + "@s.whatsapp.net"
-                cid = self._chat_id(jid)
-                self.st["active"] = cid
-                say(t("to_ok", n=cid, name=arg))
+            # /to N [text], /to +39333... [text] (the number may contain spaces)
+            m_chat = re.fullmatch(r"(\d{1,7})(?:\s+(.*))?", arg, re.S)
+            m_phone = (re.fullmatch(r"(\+?\d{8,15})(?:\s+(.*))?", arg, re.S)
+                       or re.fullmatch(r"(\+?\d[\d ]*\d)(?:\s+(\D.*))?", arg, re.S))
+            phone = m_phone and re.sub(r"\D", "", m_phone.group(1))
+            if m_chat and self._chat(int(m_chat.group(1))):
+                cid, msg = int(m_chat.group(1)), (m_chat.group(2) or "").strip()
+                name = self._chat(cid)["name"]
+            elif phone and 8 <= len(phone) <= 15:
+                cid, msg = self._chat_id(phone + "@s.whatsapp.net"), (m_phone.group(2) or "").strip()
+                name = self._chat(cid)["name"]
             else:
                 say(t("to_usage"))
+                return True
+            self.st["active"] = cid
+            say(t("to_ok", n=cid, name=name))
+            return (cid, msg) if msg or has_fields else True
         elif cmd == "r":
             if self.st["last_in"] is None:
                 say(t("reply_none"))
                 return True
-            return False
+            return (self.st["last_in"], text[len(parts[0]):].strip())
         elif cmd in ("follow", "unfollow"):
             c = self._chat(num) if num is not None else None
             if not c or not c["is_group"]:

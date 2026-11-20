@@ -1,5 +1,9 @@
 # Changelog
 
+## alpha0.4.1
+
+- **`/to` with a message**: `/to +393331234567 hello` and `/to 3 hello` now select the chat *and* send the text (before, anything after the number made the command fail with the usage message). The number may contain spaces (`/to +39 333 123 4567 hello`). `/to N` alone still only selects the chat.
+
 ## alpha0.4
 
 - **`/repeat N` (`/ripeti N`)**: the bridge keeps every message it sent you (`history_h`, default 48 h, up to `history_max`, default 100; photos and voice notes included) and sends the last N again on request, oldest first, marked `↻ HH:MM`. Useful after being out of LoRa coverage. The number is required: `/repeat` alone replies with the usage.

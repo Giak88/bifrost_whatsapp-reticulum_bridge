@@ -4,7 +4,7 @@
 
 Un ponte tra **WhatsApp** e **Reticulum / LXMF**. Le tue chat WhatsApp arrivano come messaggi LXMF in Sideband o MeshChatX e rispondi da lì, via LoRa, TCP o qualunque cosa compone la tua rete Reticulum. Foto, vocali, video e file viaggiano in entrambe le direzioni, compressi per stare in un link radio.
 
-> **Stato: alpha (`alpha0.4`).** Provato end to end contro un vero `rnsd` e usato dal vivo su un server domestico Debian 13 con un RNode Heltec V4. Aspettati qualche spigolo: vedi [Limiti noti](#limiti-noti).
+> **Stato: alpha (`alpha0.4.1`).** Provato end to end contro un vero `rnsd` e usato dal vivo su un server domestico Debian 13 con un RNode Heltec V4. Aspettati qualche spigolo: vedi [Limiti noti](#limiti-noti).
 
 ```
 WhatsApp ── Baileys (sidecar Node) ──socket Unix── bridge (Python) ── rnsd (shared instance) ── RNode / TCP / ...
@@ -72,7 +72,7 @@ Mandali dal tuo client LXMF. Ogni messaggio da WhatsApp inizia con `#N Nome:` (g
 | testo semplice | va alla chat attiva |
 | `#N testo` | va alla chat N senza cambiare quella attiva |
 | `/r testo` | risponde all'ultima chat che ti ha scritto |
-| `/to N`, `/to +39333...` | imposta la chat attiva (per numero o numero di telefono) |
+| `/to N [testo]`, `/to +39333... [testo]` | imposta la chat attiva (per numero o numero di telefono); con il testo lo invia anche |
 | `/chat [n]` | ultime chat con il loro numero |
 | `/scarica N`, `/annulla N`, `/pendenti` | media in attesa di conferma |
 | `/segui N`, `/ignora N` | inoltra un gruppo WhatsApp (di default nessuno) |

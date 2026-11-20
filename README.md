@@ -4,7 +4,7 @@
 
 A bridge between **WhatsApp** and **Reticulum / LXMF**. Your WhatsApp chats show up as LXMF messages in Sideband or MeshChatX, and you answer from there — over LoRa, TCP, or whatever your Reticulum network is made of. Photos, voice notes, videos and files go both ways, squeezed to fit a radio link.
 
-> **Status: alpha (`alpha0.4`).** Tested end to end against a real `rnsd` and used live on a Debian 13 home server with a Heltec V4 RNode. Expect rough edges: see [Known limits](#known-limits).
+> **Status: alpha (`alpha0.4.1`).** Tested end to end against a real `rnsd` and used live on a Debian 13 home server with a Heltec V4 RNode. Expect rough edges: see [Known limits](#known-limits).
 
 ```
 WhatsApp ── Baileys (Node sidecar) ──Unix socket── bridge (Python) ── rnsd (shared instance) ── RNode / TCP / ...
@@ -72,7 +72,7 @@ Send these from your LXMF client. Every message from WhatsApp starts with `#N Na
 | plain text | goes to the active chat |
 | `#N text` | goes to chat N without changing the active one |
 | `/r text` | replies to the last chat that wrote to you |
-| `/to N`, `/to +15551234567` | sets the active chat (by number or phone number) |
+| `/to N [text]`, `/to +15551234567 [text]` | sets the active chat (by number or phone number); with text, also sends it there |
 | `/chat [n]` | last chats with their numbers |
 | `/download N`, `/cancel N`, `/pending` | media waiting for confirmation |
 | `/follow N`, `/unfollow N` | forward a WhatsApp group (none by default) |

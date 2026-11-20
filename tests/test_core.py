@@ -138,6 +138,22 @@ check(wa[-1]["to"] == "12036300@g.us" and wa[-1]["text"] == "ok thanks", "/r to 
 core.on_lxmf("/to +39 333 999 8888", {})
 core.on_lxmf("test", {})
 check(wa[-1]["to"] == "393339998888@s.whatsapp.net", "/to phone number")
+n_wa = len(wa)
+core.on_lxmf("/to +393462675009 Test", {})
+check(len(wa) == n_wa + 1 and wa[-1]["to"] == "393462675009@s.whatsapp.net" and wa[-1]["text"] == "Test",
+      "/to +number text: sends right away")
+core.on_lxmf("again", {})
+check(wa[-1]["to"] == "393462675009@s.whatsapp.net", "/to +number text also sets the active chat")
+core.on_lxmf("/to +39 346 2675009 ciao a tutti", {})
+check(wa[-1]["to"] == "393462675009@s.whatsapp.net" and wa[-1]["text"] == "ciao a tutti", "/to with spaced number and text")
+core.on_lxmf("/to 1 2 biglietti", {})
+check(wa[-1]["to"].startswith("39333") and wa[-1]["text"] == "2 biglietti", "/to N text (text starting with a digit)")
+n_wa = len(wa)
+core.on_lxmf("/to 1", {})
+check(len(wa) == n_wa and lx[-1][0].startswith(T("to_ok", n=1, name="")[:6]), "/to N alone only selects")
+core.on_lxmf("/to 999", {})
+check(lx[-1][0] == T("to_usage"), "/to unknown chat: usage")
+core.on_lxmf("/to +39 333 999 8888", {})
 
 # --- outgoing media: webp (as Sideband sends) -> jpeg
 buf = io.BytesIO()
